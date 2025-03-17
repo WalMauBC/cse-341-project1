@@ -1,6 +1,6 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const MongoClient = require('mongodb').MongoClient;
+const { MongoClient } = require('mongodb');
 
 let database;
 
@@ -9,9 +9,16 @@ const initDb = (callback) => {
     console.log('Database is already initialized!');
     return callback(null, database);
   }
+
+  // Validate the connection string
+  if (!process.env.MONGODB_URI) {
+    return callback(new Error('MONGODB_URI is not defined in .env'));
+  }
+
   MongoClient.connect(process.env.MONGODB_URI)
     .then((client) => {
-      database = client;
+      database = client.db('Project1'); // Explicitly specify the database name
+      console.log('Connected to MongoDB');
       callback(null, database);
     })
     .catch((err) => {
@@ -21,7 +28,7 @@ const initDb = (callback) => {
 
 const getDatabase = () => {
   if (!database) {
-    throw Error('Database not initialized');
+    throw new Error('Database not initialized. Call initDb() first.');
   }
   return database;
 };

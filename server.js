@@ -1,30 +1,22 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const mongodb = require('./data/database');
+const { initDb } = require('./data/database');
+const routes = require('./routes/index');
 
 const app = express();
-const port = process.env.PORT || 8080;
+app.use(express.json()); // Required for parsing JSON request bodies
 
-// Middleware
-app.use(bodyParser.json()); // Parses JSON body
+// Initialize the database and start the server
+initDb((err, db) => {
+  if (err) {
+    console.error('Failed to connect to the database:', err);
+    process.exit(1); // Exit the process if the database connection fails
+  }
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Z-Key');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    next();
-});
+  // Start the server
+  app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+  });
 
-// Routes
-app.use('/', require('./routes'));
-
-// Connect to MongoDB and Start Server
-mongodb.initDb((err) => {
-    if (err) {
-        console.log(err);
-    } else {
-        app.listen(port, () => {
-            console.log(`Connected to DB and listening on port ${port}`);
-        });
-    }
+  // Use routes
+  app.use('/', routes);
 });
